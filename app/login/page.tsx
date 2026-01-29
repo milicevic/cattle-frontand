@@ -1,0 +1,162 @@
+"use client"
+
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
+import Link from "next/link"
+
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { login } from "@/lib/auth"
+
+const loginSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+})
+
+type LoginFormValues = z.infer<typeof loginSchema>
+
+export default function LoginPage() {
+  const router = useRouter()
+  const [error, setError] = useState<string>("")
+  const [isLoading, setIsLoading] = useState(false)
+
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  })
+
+  async function onSubmit(data: LoginFormValues) {
+    setIsLoading(true)
+    setError("")
+
+    try {
+      const result = await login(data)
+      
+      // Get redirect URL from query params or use default based on profile type
+      const searchParams = new URLSearchParams(window.location.search)
+      const redirectTo = searchParams.get('redirect')
+      
+      if (redirectTo) {
+        router.push(redirectTo)
+      } else {
+        // Redirect based on profile type
+        const profileType = result?.user?.profile_type?.toLowerCase()
+        if (profileType === "farmer" || result?.user?.profile_type === "Farmer") {
+          router.push("/dashboard/farmer")
+        } else if (profileType === "vet" || result?.user?.profile_type === "Vet") {
+          router.push("/dashboard/vet")
+        } else {
+          router.push("/")
+        }
+      }
+      router.refresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred during login")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-green-50 dark:bg-green-950 p-4">
+      <Card className="w-full max-w-md border-green-200 dark:border-green-800 bg-white dark:bg-green-900/50">
+        <CardHeader>
+          <CardTitle className="text-green-800 dark:text-green-100">Login</CardTitle>
+          <CardDescription className="text-green-700 dark:text-green-300">
+            Enter your credentials to access your account
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              {error && (
+                <div className="rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-3 text-sm text-red-600 dark:text-red-400">
+                  {error}
+                </div>
+              )}
+              
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-green-800 dark:text-green-200">Email</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="email" 
+                        placeholder="you@example.com" 
+                        className="border-green-200 dark:border-green-700 focus:border-green-500 dark:focus:border-green-400"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-green-800 dark:text-green-200">Password</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="password" 
+                        placeholder="••••••••" 
+                        className="border-green-200 dark:border-green-700 focus:border-green-500 dark:focus:border-green-400"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <Button 
+                type="submit" 
+                className="w-full bg-green-600 hover:bg-green-700 text-white dark:bg-green-500 dark:hover:bg-green-600" 
+                disabled={isLoading}
+              >
+                {isLoading ? "Logging in..." : "Login"}
+              </Button>
+            </form>
+          </Form>
+        </CardContent>
+        <CardFooter className="flex flex-col gap-2">
+          <p className="text-sm text-green-700 dark:text-green-300">
+            Don't have an account?{" "}
+            <Link href="/register" className="text-green-600 dark:text-green-400 font-medium hover:underline">
+              Register here
+            </Link>
+          </p>
+          <Link href="/" className="text-sm text-green-600 dark:text-green-400 hover:underline">
+            ← Back to home
+          </Link>
+        </CardFooter>
+      </Card>
+    </div>
+  )
+}

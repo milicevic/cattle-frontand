@@ -63,9 +63,16 @@ async function apiFetch(
 
   // Handle 401 unauthorized - token expired or invalid
   if (response.status === 401) {
-    // Optionally redirect to login or clear token
+    // Clear token and redirect to login
     if (typeof window !== 'undefined') {
       localStorage.removeItem('sanctum_token');
+      // Remove cookie
+      document.cookie = 'sanctum_token=; path=/; max-age=0; SameSite=Lax';
+      // Redirect to login page, preserving the current path for redirect after login
+      const currentPath = window.location.pathname;
+      if (currentPath !== '/login' && currentPath !== '/register') {
+        window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
+      }
     }
   }
 
