@@ -472,7 +472,7 @@ export function UpcomingCalvingsWidget() {
                       </TableCell>
                       <TableCell>
                         <span className={getStatusColor(calving.days_remaining, calving.progress?.status)}>
-                          {calving.days_remaining} days
+                          {Math.ceil(calving.days_remaining)} days
                         </span>
                       </TableCell>
                       <TableCell>
@@ -876,8 +876,8 @@ export function UpcomingCalvingsWidget() {
                               : 'text-green-600 dark:text-green-400'
                           }`}>
                             {selectedPregnancyProgress.days_until_calving < 0
-                              ? `${Math.abs(selectedPregnancyProgress.days_until_calving)} days overdue`
-                              : `${selectedPregnancyProgress.days_until_calving} days`
+                              ? `${Math.ceil(Math.abs(selectedPregnancyProgress.days_until_calving))} days overdue`
+                              : `${Math.ceil(selectedPregnancyProgress.days_until_calving)} days`
                             }
                           </p>
                         </div>
@@ -938,7 +938,7 @@ export function UpcomingCalvingsWidget() {
                               <span className="text-red-600 dark:text-red-400 ml-2">(Past window - inseminate soon)</span>
                             )}
                             {nextInseminationPeriod.is_before_window && (
-                              <span className="text-yellow-600 dark:text-yellow-400 ml-2">({nextInseminationPeriod.days_until_ideal_start} days until window)</span>
+                              <span className="text-yellow-600 dark:text-yellow-400 ml-2">({Math.ceil(nextInseminationPeriod.days_until_ideal_start)} days until window)</span>
                             )}
                           </p>
                         </div>

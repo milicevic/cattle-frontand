@@ -31,6 +31,7 @@ interface Notification {
 export function NotificationsWidget() {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string>("")
   const [dismissed, setDismissed] = useState<Set<string>>(new Set())
 
   useEffect(() => {
@@ -43,13 +44,19 @@ export function NotificationsWidget() {
   const loadNotifications = async () => {
     try {
       setIsLoading(true)
+      setError("")
       const response = await api.get("/api/animals/notifications")
       if (response.ok) {
         const data = await response.json()
         setNotifications(data.notifications || [])
+      } else {
+        const errorData = await response.json().catch(() => ({ message: `HTTP ${response.status}` }))
+        setError(errorData.message || "Failed to load notifications")
       }
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to connect to server"
       console.error("Error loading notifications:", err)
+      setError(errorMessage)
     } finally {
       setIsLoading(false)
     }
@@ -69,6 +76,20 @@ export function NotificationsWidget() {
 
   if (isLoading) {
     return null
+  }
+
+  // Show error if there's a connection issue
+  if (error && error.includes("Unable to connect")) {
+    return (
+      <Card className="border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20">
+        <CardContent className="pt-6">
+          <div className="flex items-center gap-2 text-yellow-800 dark:text-yellow-200">
+            <AlertCircle className="w-5 h-5" />
+            <p className="text-sm">{error}</p>
+          </div>
+        </CardContent>
+      </Card>
+    )
   }
 
   if (visibleNotifications.length === 0) {
@@ -143,7 +164,7 @@ export function NotificationsWidget() {
                         <p className="text-xs text-gray-600 dark:text-gray-400">
                           Last calving: {new Date(notification.last_calving_date).toLocaleDateString()} 
                           {notification.days_since_calving !== undefined && (
-                            <span> ({notification.days_since_calving} days ago)</span>
+                            <span> ({Math.ceil(notification.days_since_calving)} days ago)</span>
                           )}
                         </p>
                       )}
@@ -159,7 +180,7 @@ export function NotificationsWidget() {
                       )}
                       {notification.is_approaching && notification.days_until_ideal !== undefined && (
                         <p className="text-xs text-yellow-600 dark:text-yellow-400 font-medium">
-                          ⏳ {notification.days_until_ideal} days until ideal window starts
+                          ⏳ {Math.ceil(notification.days_until_ideal)} days until ideal window starts
                         </p>
                       )}
                     </div>

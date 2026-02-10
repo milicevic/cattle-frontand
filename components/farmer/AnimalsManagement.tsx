@@ -1255,7 +1255,7 @@ export function AnimalsManagement() {
                                     {new Date(selectedPregnancyProgress.last_insemination_date).toLocaleDateString()}
                                   </p>
                                   <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                                    {selectedPregnancyProgress.days_since_insemination} days ago
+                                    {Math.ceil(selectedPregnancyProgress.days_since_insemination)} days ago
                                   </p>
                                 </div>
                               </div>
@@ -1287,8 +1287,8 @@ export function AnimalsManagement() {
                                         : 'text-green-600 dark:text-green-400'
                                     }`}>
                                       {selectedPregnancyProgress.days_until_calving < 0
-                                        ? `${Math.abs(selectedPregnancyProgress.days_until_calving)} days overdue`
-                                        : `${selectedPregnancyProgress.days_until_calving} days remaining`
+                                        ? `${Math.ceil(Math.abs(selectedPregnancyProgress.days_until_calving))} days overdue`
+                                        : `${Math.ceil(selectedPregnancyProgress.days_until_calving)} days remaining`
                                       }
                                     </p>
                                   )}
@@ -1410,7 +1410,7 @@ export function AnimalsManagement() {
                                   </p>
                                   {nextInseminationPeriod.is_before_window && (
                                     <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
-                                      {nextInseminationPeriod.days_until_ideal_start} days remaining
+                                      {Math.ceil(nextInseminationPeriod.days_until_ideal_start)} days remaining
                                     </p>
                                   )}
                                 </div>
@@ -1475,7 +1475,7 @@ export function AnimalsManagement() {
                                 <span className="text-red-600 dark:text-red-400"> This cow is past the ideal window and should be inseminated soon.</span>
                               )}
                               {nextInseminationPeriod.is_before_window && (
-                                <span className="text-yellow-600 dark:text-yellow-400"> Wait {nextInseminationPeriod.days_until_ideal_start} more days before insemination.</span>
+                                <span className="text-yellow-600 dark:text-yellow-400"> Wait {Math.ceil(nextInseminationPeriod.days_until_ideal_start)} more days before insemination.</span>
                               )}
                             </p>
                           </div>

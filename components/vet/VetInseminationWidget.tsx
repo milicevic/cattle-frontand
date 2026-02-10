@@ -17,6 +17,8 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
+import { Eye, AlertCircle, Calendar, Droplets, History, CheckCircle, XCircle, RefreshCw, Clock } from "lucide-react"
+import { Pagination } from "@/components/ui/pagination"
 import {
   Dialog,
   DialogContent,
@@ -24,10 +26,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Eye, AlertCircle, Calendar, Droplets, History, CheckCircle, XCircle, RefreshCw, Clock } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Pagination } from "@/components/ui/pagination"
 import api from "@/lib/api"
 
 interface CowNeedingInsemination {
@@ -50,6 +50,17 @@ interface CowNeedingInsemination {
   }
 }
 
+interface BullOption {
+  id: number
+  animalable_id: number
+  tag_number: string
+  name?: string
+}
+
+interface VetInseminationWidgetProps {
+  farmId: number
+}
+
 interface InseminationRecord {
   id: number
   insemination_date: string
@@ -61,14 +72,7 @@ interface InseminationRecord {
   updated_at: string
 }
 
-interface BullOption {
-  id: number
-  animalable_id: number
-  tag_number: string
-  name?: string
-}
-
-export function InseminationWidget() {
+export function VetInseminationWidget({ farmId }: VetInseminationWidgetProps) {
   const [cows, setCows] = useState<CowNeedingInsemination[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string>("")
@@ -97,7 +101,7 @@ export function InseminationWidget() {
     try {
       setIsLoading(true)
       setError("")
-      const response = await api.get(`/api/animals/needing-insemination?page=${page}&per_page=${perPage}`)
+      const response = await api.get(`/api/animals/needing-insemination?page=${page}&per_page=${perPage}&farm_id=${farmId}`)
       if (response.ok) {
         const data = await response.json()
         setCows(data.cows || [])
@@ -111,20 +115,14 @@ export function InseminationWidget() {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [farmId])
 
   useEffect(() => {
     loadCows(currentPage, itemsPerPage)
   }, [currentPage, itemsPerPage, loadCows])
 
-  const getStatusColor = (status: string, isOverdue: boolean) => {
-    if (isOverdue) return "text-red-600 dark:text-red-400"
-    if (status === 'ready') return "text-yellow-600 dark:text-yellow-400"
-    return "text-green-600 dark:text-green-400"
-  }
-
   const getStatusBadge = (status: string, isOverdue: boolean) => {
-    if (isOverdue) {
+    if (isOverdue || status === 'overdue') {
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-200">
           <AlertCircle className="w-3 h-3 mr-1" />
@@ -134,14 +132,14 @@ export function InseminationWidget() {
     }
     if (status === 'ready') {
       return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200">
-          <AlertCircle className="w-3 h-3 mr-1" />
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200">
+          <Calendar className="w-3 h-3 mr-1" />
           Ready
         </span>
       )
     }
     return (
-      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200">
+      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200">
         <Calendar className="w-3 h-3 mr-1" />
         Approaching
       </span>
@@ -151,7 +149,7 @@ export function InseminationWidget() {
   const loadBulls = useCallback(async () => {
     try {
       setIsLoadingBulls(true)
-      const response = await api.get("/api/animals?type=Bull&per_page=100")
+      const response = await api.get(`/api/animals?type=Bull&farm_id=${farmId}&per_page=100`)
       if (response.ok) {
         const data = await response.json()
         const list: BullOption[] = (data.animals || []).map((a: { id: number; animalable_id: number; tag_number: string; name?: string }) => ({
@@ -161,13 +159,15 @@ export function InseminationWidget() {
           name: a.name,
         }))
         setBulls(list)
+      } else {
+        setBulls([])
       }
     } catch {
       setBulls([])
     } finally {
       setIsLoadingBulls(false)
     }
-  }, [])
+  }, [farmId])
 
   const handleInseminateClick = (cow: CowNeedingInsemination) => {
     setSelectedCow(cow)
@@ -231,12 +231,9 @@ export function InseminationWidget() {
         throw new Error(errorData.message || "Failed to update status")
       }
 
-      // Refresh history and close dialog
       await handleViewHistory(selectedCow)
       setIsStatusDialogOpen(false)
       setSelectedInsemination(null)
-      
-      // Reload the cows list
       await loadCows(currentPage, itemsPerPage)
     } catch (err) {
       setDialogError(err instanceof Error ? err.message : "An error occurred while updating status")
@@ -302,15 +299,12 @@ export function InseminationWidget() {
         throw new Error(errorData.message || "Failed to record insemination")
       }
 
-      // Close dialog and refresh the list
       setIsInseminationDialogOpen(false)
       setSelectedCow(null)
       setInseminationDate("")
       setInseminationNotes("")
       setSelectedBullId("")
       setDialogError("")
-      
-      // Reload the cows list
       await loadCows(currentPage, itemsPerPage)
     } catch (err) {
       setDialogError(err instanceof Error ? err.message : "An error occurred while recording insemination")
@@ -324,7 +318,7 @@ export function InseminationWidget() {
       <Card className="border-green-200 dark:border-green-800 bg-white dark:bg-green-900/50">
         <CardHeader>
           <CardTitle className="text-green-800 dark:text-green-100">
-            Insemination Due
+            Cows Needing Insemination
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -341,7 +335,7 @@ export function InseminationWidget() {
       <Card className="border-green-200 dark:border-green-800 bg-white dark:bg-green-900/50">
         <CardHeader>
           <CardTitle className="text-green-800 dark:text-green-100">
-            Insemination Due
+            Cows Needing Insemination
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -359,11 +353,11 @@ export function InseminationWidget() {
         <div className="flex justify-between items-center">
           <div>
             <CardTitle className="text-green-800 dark:text-green-100 flex items-center gap-2">
-              <Calendar className="w-5 h-5" />
-              Insemination Due
+              <Droplets className="w-5 h-5" />
+              Cows Needing Insemination
             </CardTitle>
             <CardDescription className="text-green-700 dark:text-green-300">
-              Cows ready for insemination (45-95 days since calving)
+              Cows ready for or overdue for insemination
             </CardDescription>
           </div>
           <div className="text-2xl font-bold text-green-600 dark:text-green-400">
@@ -374,8 +368,8 @@ export function InseminationWidget() {
       <CardContent>
         {cows.length === 0 ? (
           <div className="text-center py-8 text-green-600 dark:text-green-400">
-            <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>No cows need insemination at this time</p>
+            <Droplets className="w-12 h-12 mx-auto mb-4 opacity-50" />
+            <p>No cows needing insemination at this time</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -385,10 +379,10 @@ export function InseminationWidget() {
                   <TableRow>
                     <TableHead>Tag Number</TableHead>
                     <TableHead>Name</TableHead>
+                    <TableHead>Last Calving</TableHead>
                     <TableHead>Days Since Calving</TableHead>
-                    <TableHead>Days Until Ideal</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Insemination Status</TableHead>
+                    <TableHead>Latest Insemination</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -400,13 +394,11 @@ export function InseminationWidget() {
                       </TableCell>
                       <TableCell>{cow.name || "-"}</TableCell>
                       <TableCell>
-                        <span className={getStatusColor(cow.status, cow.is_overdue)}>
-                          {Math.ceil(cow.days_since_calving)} days
-                        </span>
+                        {new Date(cow.last_calving_date).toLocaleDateString()}
                       </TableCell>
                       <TableCell>
-                        <span className={getStatusColor(cow.status, cow.is_overdue)}>
-                          {cow.is_overdue ? 'Overdue' : `${Math.ceil(cow.days_until_ideal)} days`}
+                        <span className={cow.is_overdue ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-400"}>
+                          {Math.ceil(cow.days_since_calving)} days
                         </span>
                       </TableCell>
                       <TableCell>
@@ -414,9 +406,14 @@ export function InseminationWidget() {
                       </TableCell>
                       <TableCell>
                         {cow.latest_insemination ? (
-                          getInseminationStatusBadge(cow.latest_insemination.status)
+                          <div className="text-sm">
+                            <div>{new Date(cow.latest_insemination.insemination_date).toLocaleDateString()}</div>
+                            <div className="text-xs text-green-600 dark:text-green-400 capitalize">
+                              {cow.latest_insemination.status}
+                            </div>
+                          </div>
                         ) : (
-                          <span className="text-gray-400 text-sm">-</span>
+                          <span className="text-sm text-gray-500">None</span>
                         )}
                       </TableCell>
                       <TableCell>
@@ -463,17 +460,6 @@ export function InseminationWidget() {
                 />
               )}
             </div>
-            <div className="flex justify-end">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => window.location.href = "/dashboard/farmer"}
-                className="text-green-600 border-green-300 hover:bg-green-50 dark:text-green-400 dark:border-green-700"
-              >
-                <Eye className="w-4 h-4 mr-2" />
-                View All Animals
-              </Button>
-            </div>
           </div>
         )}
       </CardContent>
@@ -509,9 +495,6 @@ export function InseminationWidget() {
                 className="border-green-300 dark:border-green-700"
                 max={new Date().toISOString().split('T')[0]}
               />
-              <p className="text-xs text-green-600 dark:text-green-400">
-                Select the date when insemination was performed
-              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="bull_id" className="text-green-800 dark:text-green-100">
@@ -543,7 +526,7 @@ export function InseminationWidget() {
                 id="insemination_notes"
                 value={inseminationNotes}
                 onChange={(e) => setInseminationNotes(e.target.value)}
-                className="flex min-h-[80px] w-full rounded-md border border-green-300 dark:border-green-700 bg-white dark:bg-green-900 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex min-h-[80px] w-full rounded-md border border-green-300 dark:border-green-700 bg-white dark:bg-green-900 px-3 py-2 text-sm"
                 placeholder="Add any notes about this insemination..."
               />
             </div>
@@ -561,7 +544,6 @@ export function InseminationWidget() {
                 setDialogError("")
               }}
               disabled={isRecordingInsemination}
-              className="border-green-300 dark:border-green-700"
             >
               Cancel
             </Button>
@@ -636,7 +618,7 @@ export function InseminationWidget() {
                             variant="outline"
                             size="sm"
                             onClick={() => handleUpdateStatusClick(insemination)}
-                            className="text-blue-600 border-blue-300 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-700"
+                            className="text-blue-600 border-blue-300 hover:bg-blue-50"
                           >
                             Update Status
                           </Button>
@@ -658,7 +640,6 @@ export function InseminationWidget() {
                 setInseminationHistory([])
                 setDialogError("")
               }}
-              className="border-green-300 dark:border-green-700"
             >
               Close
             </Button>
@@ -693,7 +674,7 @@ export function InseminationWidget() {
                 id="status"
                 value={inseminationStatus}
                 onChange={(e) => setInseminationStatus(e.target.value as 'pending' | 'confirmed' | 'failed' | 'needs_repeat')}
-                className="flex h-10 w-full rounded-md border border-green-300 dark:border-green-700 bg-white dark:bg-green-900 px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-10 w-full rounded-md border border-green-300 dark:border-green-700 bg-white dark:bg-green-900 px-3 py-2 text-sm"
               >
                 <option value="pending">Pending</option>
                 <option value="confirmed">Confirmed</option>
@@ -709,7 +690,7 @@ export function InseminationWidget() {
                 id="status_notes"
                 value={statusNotes}
                 onChange={(e) => setStatusNotes(e.target.value)}
-                className="flex min-h-[80px] w-full rounded-md border border-green-300 dark:border-green-700 bg-white dark:bg-green-900 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex min-h-[80px] w-full rounded-md border border-green-300 dark:border-green-700 bg-white dark:bg-green-900 px-3 py-2 text-sm"
                 placeholder="Add notes about the status update..."
               />
             </div>
@@ -725,7 +706,6 @@ export function InseminationWidget() {
                 setDialogError("")
               }}
               disabled={isUpdatingStatus}
-              className="border-green-300 dark:border-green-700"
             >
               Cancel
             </Button>

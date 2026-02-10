@@ -19,7 +19,9 @@ export async function login(credentials: LoginCredentials): Promise<any> {
   if (typeof window !== 'undefined' && result.token) {
     localStorage.setItem('sanctum_token', result.token)
     // Also set cookie for middleware to check
-    document.cookie = `sanctum_token=${result.token}; path=/; max-age=86400; SameSite=Lax`
+    // Use SameSite=Lax for same-origin, and ensure path is root so it's accessible everywhere
+    const cookieValue = `sanctum_token=${encodeURIComponent(result.token)}; path=/; max-age=86400; SameSite=Lax`
+    document.cookie = cookieValue
   }
 
   return result

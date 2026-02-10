@@ -20,9 +20,11 @@ export default function FarmerDashboard() {
   const [isChecking, setIsChecking] = useState(true)
 
   useEffect(() => {
-    // Check authentication on mount
+    // Middleware handles authentication check, but we can verify token exists
+    // If no token in localStorage, redirect (middleware should have caught this, but double-check)
     if (!isAuthenticated()) {
-      router.push("/login?redirect=/dashboard/farmer")
+      // Use window.location to ensure full redirect (middleware will handle it)
+      window.location.href = "/login?redirect=/dashboard/farmer"
       return
     }
     setIsChecking(false)

@@ -78,6 +78,21 @@ interface NextInseminationPeriod {
   status: 'ready' | 'overdue' | 'approaching'
 }
 
+interface CalvingRecord {
+  id: number
+  calving_date: string
+  is_successful: boolean
+  notes?: string
+  performed_by?: {
+    id: number
+    email: string
+    profile?: {
+      id: number
+    }
+  }
+  created_at: string
+}
+
 interface Farm {
   id: number
   name: string
@@ -120,6 +135,7 @@ export function VetAnimalsManagement({ farmId, farmName }: VetAnimalsManagementP
   const [selectedAnimal, setSelectedAnimal] = useState<Animal | null>(null)
   const [selectedPregnancyProgress, setSelectedPregnancyProgress] = useState<PregnancyProgress | null>(null)
   const [nextInseminationPeriod, setNextInseminationPeriod] = useState<NextInseminationPeriod | null>(null)
+  const [calvingHistory, setCalvingHistory] = useState<CalvingRecord[]>([])
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false)
   const [isCattleInfoCollapsed, setIsCattleInfoCollapsed] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
@@ -172,12 +188,14 @@ export function VetAnimalsManagement({ farmId, farmName }: VetAnimalsManagementP
 
   const loadAnimalDetails = async (animalId: number) => {
     try {
+      setIsLoading(true)
       const response = await api.get(`/api/animals/${animalId}`)
       if (response.ok) {
         const data = await response.json()
         setSelectedAnimal(data.animal)
         setSelectedPregnancyProgress(data.pregnancy_progress || null)
         setNextInseminationPeriod(data.next_insemination_period || null)
+        setCalvingHistory(data.calving_history || [])
         setIsCattleInfoCollapsed(true)
         // Initialize edit form data with properly formatted dates
         setEditFormData({
@@ -197,9 +215,16 @@ export function VetAnimalsManagement({ farmId, farmName }: VetAnimalsManagementP
         })
         setIsDetailDialogOpen(true)
         setIsEditing(false)
+        setError("")
+      } else {
+        const errorData = await response.json().catch(() => ({}))
+        setError(errorData.message || "Failed to load animal details")
       }
     } catch (err) {
       console.error("Error loading animal details:", err)
+      setError(err instanceof Error ? err.message : "Failed to load animal details")
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -239,6 +264,7 @@ export function VetAnimalsManagement({ farmId, farmName }: VetAnimalsManagementP
         setSelectedAnimal(data.animal)
         setSelectedPregnancyProgress(data.pregnancy_progress || null)
         setNextInseminationPeriod(data.next_insemination_period || null)
+        setCalvingHistory(data.calving_history || [])
         setIsEditing(false)
         await loadAnimals(currentPage, itemsPerPage) // Refresh the list
       } else {
@@ -247,6 +273,72 @@ export function VetAnimalsManagement({ farmId, farmName }: VetAnimalsManagementP
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred")
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  const handleRecordInsemination = async () => {
+    if (!selectedAnimal) return
+
+    setIsUpdating(true)
+    setError("")
+
+    try {
+      const today = new Date().toISOString().split('T')[0]
+
+      // Use the same endpoint as farmers - creates an insemination record
+      const response = await api.post(`/api/animals/${selectedAnimal.id}/insemination`, {
+        insemination_date: today,
+        notes: null,
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        // Reload animal details to get updated pregnancy progress
+        await loadAnimalDetails(selectedAnimal.id)
+        await loadAnimals(currentPage, itemsPerPage) // Refresh the list
+        setError("") // Clear any previous errors
+      } else {
+        const errorData = await response.json()
+        setError(errorData.message || "Failed to record insemination")
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to record insemination")
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  const handleRecordCalving = async () => {
+    if (!selectedAnimal) return
+
+    setIsUpdating(true)
+    setError("")
+
+    try {
+      const today = new Date().toISOString().split('T')[0]
+
+      // Use the same endpoint as farmers - creates a calving record
+      const response = await api.post(`/api/animals/${selectedAnimal.id}/calving`, {
+        is_successful: true,
+        calving_date: today,
+        notes: null,
+        calves: null, // Vets can add calves later if needed
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        // Reload animal details to get updated data
+        await loadAnimalDetails(selectedAnimal.id)
+        await loadAnimals(currentPage, itemsPerPage) // Refresh the list
+        setError("") // Clear any previous errors
+      } else {
+        const errorData = await response.json()
+        setError(errorData.message || "Failed to record calving")
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to record calving")
     } finally {
       setIsUpdating(false)
     }
@@ -932,6 +1024,33 @@ export function VetAnimalsManagement({ farmId, farmName }: VetAnimalsManagementP
                       </div>
                     )}
 
+                    {/* Quick Actions for Insemination and Calving */}
+                    {(selectedAnimal.type === "Cow" || selectedAnimal.type === "Heifer") && (
+                      <div className="border-t border-green-200 dark:border-green-700 pt-4">
+                        <h3 className="text-lg font-semibold text-green-800 dark:text-green-100 mb-3">
+                          Quick Actions
+                        </h3>
+                        <div className="flex gap-3 flex-wrap">
+                          <Button
+                            onClick={handleRecordInsemination}
+                            disabled={isUpdating}
+                            className="bg-blue-600 hover:bg-blue-700 text-white"
+                          >
+                            {isUpdating ? "Recording..." : "Record Insemination (Today)"}
+                          </Button>
+                          {selectedPregnancyProgress && !selectedPregnancyProgress.actual_calving_date && (
+                            <Button
+                              onClick={handleRecordCalving}
+                              disabled={isUpdating}
+                              className="bg-green-600 hover:bg-green-700 text-white"
+                            >
+                              {isUpdating ? "Recording..." : "Record Calving (Today)"}
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Pregnancy Progress Visualization - Same as farmer's */}
                     {selectedPregnancyProgress && (selectedAnimal.type === "Cow" || selectedAnimal.type === "Heifer") && (
                       <div>
@@ -1006,8 +1125,8 @@ export function VetAnimalsManagement({ farmId, farmName }: VetAnimalsManagementP
                                         : 'text-green-600 dark:text-green-400'
                                     }`}>
                                       {selectedPregnancyProgress.days_until_calving < 0
-                                        ? `${Math.abs(selectedPregnancyProgress.days_until_calving)} days overdue`
-                                        : `${selectedPregnancyProgress.days_until_calving} days remaining`
+                                        ? `${Math.ceil(Math.abs(selectedPregnancyProgress.days_until_calving))} days overdue`
+                                        : `${Math.ceil(selectedPregnancyProgress.days_until_calving)} days remaining`
                                       }
                                     </p>
                                   )}
@@ -1028,7 +1147,7 @@ export function VetAnimalsManagement({ farmId, farmName }: VetAnimalsManagementP
                               )}
                             </div>
                           </div>
-                          <div className="pt-2">
+                          <div className="pt-2 flex items-center justify-between">
                             <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
                               selectedPregnancyProgress.status === 'calved'
                                 ? 'bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200'
@@ -1047,7 +1166,61 @@ export function VetAnimalsManagement({ farmId, farmName }: VetAnimalsManagementP
                                 : '🤰 Pregnant'
                               }
                             </span>
+                            {!selectedPregnancyProgress.actual_calving_date && (
+                              <Button
+                                onClick={handleRecordCalving}
+                                disabled={isUpdating}
+                                size="sm"
+                                className="bg-green-600 hover:bg-green-700 text-white"
+                              >
+                                {isUpdating ? "Recording..." : "Record Calving Now"}
+                              </Button>
+                            )}
                           </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Calving History - Show for all animals */}
+                    {calvingHistory.length > 0 && (
+                      <div>
+                        <h3 className="text-lg font-semibold text-green-800 dark:text-green-100 mb-3">
+                          Calving History
+                        </h3>
+                        <div className="space-y-3">
+                          {calvingHistory.map((calving) => (
+                            <div
+                              key={calving.id}
+                              className="p-4 border border-green-200 dark:border-green-800 rounded-lg bg-white dark:bg-green-900/30"
+                            >
+                              <div className="flex justify-between items-start">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                      calving.is_successful
+                                        ? 'bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200'
+                                        : 'bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-200'
+                                    }`}>
+                                      {calving.is_successful ? '✓ Successful' : '✗ Unsuccessful'}
+                                    </span>
+                                    <span className="text-sm font-medium text-green-800 dark:text-green-100">
+                                      {new Date(calving.calving_date).toLocaleDateString()}
+                                    </span>
+                                  </div>
+                                  {calving.notes && (
+                                    <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+                                      {calving.notes}
+                                    </p>
+                                  )}
+                                  {calving.performed_by && (
+                                    <p className="text-xs text-green-600 dark:text-green-400 mt-2">
+                                      Recorded by: {calving.performed_by.email}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     )}
@@ -1055,9 +1228,21 @@ export function VetAnimalsManagement({ farmId, farmName }: VetAnimalsManagementP
                     {/* Next Insemination Period */}
                     {nextInseminationPeriod && (selectedAnimal.type === "Cow" || selectedAnimal.type === "Heifer") && (
                       <div>
-                        <h3 className="text-lg font-semibold text-green-800 dark:text-green-100 mb-3">
-                          Next Insemination Period
-                        </h3>
+                        <div className="flex justify-between items-center mb-3">
+                          <h3 className="text-lg font-semibold text-green-800 dark:text-green-100">
+                            Next Insemination Period
+                          </h3>
+                          {(nextInseminationPeriod.status === 'ready' || nextInseminationPeriod.status === 'overdue') && (
+                            <Button
+                              onClick={handleRecordInsemination}
+                              disabled={isUpdating}
+                              size="sm"
+                              className="bg-blue-600 hover:bg-blue-700 text-white"
+                            >
+                              {isUpdating ? "Recording..." : "Record Insemination Now"}
+                            </Button>
+                          )}
+                        </div>
                         <div className="space-y-4">
                           <div>
                             <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
@@ -1088,7 +1273,7 @@ export function VetAnimalsManagement({ farmId, farmName }: VetAnimalsManagementP
                                     {new Date(nextInseminationPeriod.last_calving_date).toLocaleDateString()}
                                   </p>
                                   <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                                    {nextInseminationPeriod.days_since_calving} days ago
+                                    {Math.ceil(nextInseminationPeriod.days_since_calving)} days ago
                                   </p>
                                 </div>
                               </div>

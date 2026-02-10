@@ -1,6 +1,6 @@
 "use client"
 
-type DashboardView = "requests" | "farms" | "profile"
+import type { DashboardView } from "@/types"
 
 interface VetBottomMenuProps {
   activeView: DashboardView

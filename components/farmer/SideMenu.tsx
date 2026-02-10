@@ -25,8 +25,8 @@ export function SideMenu({ activeView, setActiveView }: SideMenuProps) {
   ]
 
   return (
-    <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 bg-white dark:bg-green-900 border-r border-green-200 dark:border-green-800">
-      <div className="flex flex-col flex-grow pt-5 pb-4 overflow-y-auto">
+    <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 md:z-50 bg-white dark:bg-green-900 border-r border-green-200 dark:border-green-800 shadow-lg">
+      <div className="flex flex-col flex-grow pt-5 pb-4 overflow-y-auto bg-white dark:bg-green-900">
         <div className="flex items-center flex-shrink-0 px-4 mb-8">
           <h1 className="text-xl font-bold text-green-800 dark:text-green-100">
             Cattle Management

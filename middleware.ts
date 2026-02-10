@@ -2,9 +2,16 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
-  // Check for token in cookie or Authorization header
-  const token = request.cookies.get('sanctum_token')?.value || 
-                request.headers.get('authorization')?.replace('Bearer ', '')
+  // Check for token in cookie (primary method for page navigation)
+  const tokenCookie = request.cookies.get('sanctum_token')?.value
+  
+  // Also check Authorization header (for API calls)
+  const authHeader = request.headers.get('authorization')
+  const tokenFromHeader = authHeader?.startsWith('Bearer ') 
+    ? authHeader.replace('Bearer ', '') 
+    : null
+  
+  const token = tokenCookie || tokenFromHeader
 
   // Check if the route is a protected route
   const isProtectedRoute = request.nextUrl.pathname.startsWith('/dashboard')
@@ -13,6 +20,8 @@ export function middleware(request: NextRequest) {
   if (isProtectedRoute && !token) {
     const loginUrl = new URL('/login', request.url)
     loginUrl.searchParams.set('redirect', request.nextUrl.pathname)
+    // Add a message parameter to show why redirect happened
+    loginUrl.searchParams.set('message', 'Please login to access this page')
     return NextResponse.redirect(loginUrl)
   }
 

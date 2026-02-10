@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 
 import { Button } from "@/components/ui/button"
@@ -39,6 +39,15 @@ export default function LoginPage() {
   const [error, setError] = useState<string>("")
   const [isLoading, setIsLoading] = useState(false)
 
+  // Check for redirect message from middleware
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search)
+    const message = searchParams.get('message')
+    if (message) {
+      setError(message)
+    }
+  }, [])
+
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -58,20 +67,23 @@ export default function LoginPage() {
       const searchParams = new URLSearchParams(window.location.search)
       const redirectTo = searchParams.get('redirect')
       
-      if (redirectTo) {
-        router.push(redirectTo)
-      } else {
-        // Redirect based on profile type
-        const profileType = result?.user?.profile_type?.toLowerCase()
-        if (profileType === "farmer" || result?.user?.profile_type === "Farmer") {
-          router.push("/dashboard/farmer")
-        } else if (profileType === "vet" || result?.user?.profile_type === "Vet") {
-          router.push("/dashboard/vet")
-        } else {
-          router.push("/")
-        }
-      }
-      router.refresh()
+      // Use window.location.href for full page reload to ensure cookies are available to middleware
+      const redirectUrl = redirectTo || (
+        (() => {
+          const profileType = result?.user?.profile_type?.toLowerCase()
+          if (profileType === "farmer" || result?.user?.profile_type === "Farmer") {
+            return "/dashboard/farmer"
+          } else if (profileType === "vet" || result?.user?.profile_type === "Vet") {
+            return "/dashboard/vet"
+          }
+          return "/"
+        })()
+      )
+      
+      // Small delay to ensure cookie is set before redirect
+      setTimeout(() => {
+        window.location.href = redirectUrl
+      }, 100)
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred during login")
     } finally {

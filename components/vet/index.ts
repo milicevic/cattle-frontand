@@ -1,0 +1,10 @@
+// Central export point for vet components
+export { VetSideMenu } from "./VetSideMenu"
+export { VetBottomMenu } from "./VetBottomMenu"
+export { VetProfile } from "./VetProfile"
+export { VetAnimalsManagement } from "./VetAnimalsManagement"
+export { VetUpcomingCalvingsWidget } from "./VetUpcomingCalvingsWidget"
+export { VetInseminationWidget } from "./VetInseminationWidget"
+export { VetRequestsView } from "./VetRequestsView"
+export { VetFarmsView } from "./VetFarmsView"
+export { VetFarmDetails } from "./VetFarmDetails"
