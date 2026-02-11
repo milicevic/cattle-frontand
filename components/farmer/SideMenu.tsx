@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { logout } from "@/lib/auth"
+import { useTranslations } from "@/hooks/useTranslations"
 
 type DashboardView = "farm" | "animals" | "vets"
 
@@ -12,6 +13,7 @@ interface SideMenuProps {
 
 export function SideMenu({ activeView, setActiveView }: SideMenuProps) {
   const router = useRouter()
+  const { t } = useTranslations()
 
   const handleLogout = async () => {
     await logout()
@@ -19,9 +21,9 @@ export function SideMenu({ activeView, setActiveView }: SideMenuProps) {
   }
 
   const menuItems = [
-    { id: "farm" as DashboardView, label: "Farm Information", icon: "🏡" },
-    { id: "animals" as DashboardView, label: "Animals", icon: "🐄" },
-    { id: "vets" as DashboardView, label: "Veterinarians", icon: "👨‍⚕️" },
+    { id: "farm" as DashboardView, label: t("menu.farm_information"), icon: "🏡" },
+    { id: "animals" as DashboardView, label: t("menu.animals"), icon: "🐄" },
+    { id: "vets" as DashboardView, label: t("menu.veterinarians"), icon: "👨‍⚕️" },
   ]
 
   return (
@@ -54,7 +56,7 @@ export function SideMenu({ activeView, setActiveView }: SideMenuProps) {
             className="w-full flex items-center px-4 py-3 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
           >
             <span className="mr-3">🚪</span>
-            Logout
+            {t("common.logout")}
           </button>
         </div>
       </div>

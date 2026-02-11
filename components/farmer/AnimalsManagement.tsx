@@ -28,6 +28,7 @@ import {
 import { Eye, Grid, List, Edit, Save, X, ChevronDown, ChevronUp } from "lucide-react"
 import { Pagination } from "@/components/ui/pagination"
 import api from "@/lib/api"
+import { useTranslations } from "@/hooks/useTranslations"
 
 type Species = "cattle" | "horse" | "sheep"
 
@@ -116,6 +117,7 @@ function getGenderFromType(type: string, species: Species): "male" | "female" {
 type ViewMode = "table" | "cards"
 
 export function AnimalsManagement() {
+  const { t } = useTranslations()
   const [animals, setAnimals] = useState<Animal[]>([])
   const [allAnimals, setAllAnimals] = useState<Animal[]>([])
   const [selectedSpecies, setSelectedSpecies] = useState<Species>("cattle")
@@ -365,10 +367,10 @@ export function AnimalsManagement() {
       <Card className="border-green-200 dark:border-green-800 bg-white dark:bg-green-900/50">
         <CardHeader>
           <CardTitle className="text-green-800 dark:text-green-100">
-            Animals Management
+            {t("animals.title")}
           </CardTitle>
           <CardDescription className="text-green-700 dark:text-green-300">
-            Manage your livestock by species
+            {t("animals.title")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -419,7 +421,7 @@ export function AnimalsManagement() {
                       : "bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-700"
                   }`}
                 >
-                  All Types ({filteredAnimals.length})
+                  {t("animals.type")} ({filteredAnimals.length})
                 </button>
                 {currentSpecies.types.map((type) => {
                   const count = typeCounts[type] || 0
@@ -458,7 +460,7 @@ export function AnimalsManagement() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="text-sm font-medium text-green-800 dark:text-green-200">
-                        Tag Number *
+                        {t("animals.tag_number")} *
                       </label>
                       <Input
                         value={formData.tag_number}
@@ -471,7 +473,7 @@ export function AnimalsManagement() {
                     </div>
                     <div>
                       <label className="text-sm font-medium text-green-800 dark:text-green-200">
-                        Type *
+                        {t("animals.type")} *
                       </label>
                       <select
                         value={formData.type}
@@ -490,9 +492,9 @@ export function AnimalsManagement() {
                       </select>
                       {formData.type && (
                         <p className="mt-1 text-xs text-green-600 dark:text-green-400">
-                          Gender will be automatically set to:{" "}
+                          {t("animals.gender")} {" "}
                           <span className="font-medium capitalize">
-                            {getGenderFromType(formData.type, selectedSpecies)}
+                            {getGenderFromType(formData.type, selectedSpecies) === "male" ? t("animals.male") : t("animals.female")}
                           </span>
                         </p>
                       )}
@@ -512,7 +514,7 @@ export function AnimalsManagement() {
                     {/* Gender is automatically determined based on type - no input field needed */}
                     <div>
                       <label className="text-sm font-medium text-green-800 dark:text-green-200">
-                        Date of Birth
+                        {t("animals.date_of_birth")}
                       </label>
                       <Input
                         type="date"
@@ -654,8 +656,8 @@ export function AnimalsManagement() {
                       <TableHead>Tag Number</TableHead>
                       <TableHead>Name</TableHead>
                       <TableHead>Type</TableHead>
-                      <TableHead>Gender</TableHead>
-                      <TableHead>Date of Birth</TableHead>
+                      <TableHead>{t("animals.gender")}</TableHead>
+                      <TableHead>{t("animals.date_of_birth")}</TableHead>
                       <TableHead>Mother</TableHead>
                       <TableHead>Father</TableHead>
                       <TableHead>Actions</TableHead>
@@ -677,7 +679,7 @@ export function AnimalsManagement() {
                             {animal.type}
                           </span>
                         </TableCell>
-                        <TableCell className="capitalize">{animal.gender}</TableCell>
+                        <TableCell className="capitalize">{animal.gender === "male" ? t("animals.male") : t("animals.female")}</TableCell>
                         <TableCell>
                           {animal.date_of_birth
                             ? new Date(animal.date_of_birth).toLocaleDateString()
@@ -695,7 +697,7 @@ export function AnimalsManagement() {
                                 handleAnimalClick(animal)
                               }}
                               className="text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
-                              title="View Details"
+                              title={t("animals.view_details")}
                             >
                               <Eye className="w-4 h-4" />
                             </Button>
@@ -707,7 +709,7 @@ export function AnimalsManagement() {
                                 handleEditAnimal(animal)
                               }}
                               className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-                              title="Edit Animal"
+                              title={t("common.edit")}
                             >
                               <Edit className="w-4 h-4" />
                             </Button>
@@ -759,13 +761,13 @@ export function AnimalsManagement() {
                     <CardContent>
                       <div className="space-y-2">
                         <div className="flex justify-between">
-                          <span className="text-sm text-green-700 dark:text-green-300">Type:</span>
+                          <span className="text-sm text-green-700 dark:text-green-300">{t("animals.type")}:</span>
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200 capitalize">
                             {animal.type}
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-sm text-green-700 dark:text-green-300">Gender:</span>
+                          <span className="text-sm text-green-700 dark:text-green-300">{t("animals.gender")}:</span>
                           <span className="text-sm font-medium capitalize text-green-800 dark:text-green-200">
                             {animal.gender}
                           </span>
@@ -818,7 +820,7 @@ export function AnimalsManagement() {
                           }}
                         >
                           <Edit className="w-4 h-4 mr-2" />
-                          Edit
+                          {t("common.edit")}
                         </Button>
                       </div>
                     </CardContent>
@@ -846,7 +848,7 @@ export function AnimalsManagement() {
                           {selectedAnimal.name || selectedAnimal.tag_number}
                         </DialogTitle>
                         <DialogDescription className="text-green-700 dark:text-green-300">
-                          Tag Number: {selectedAnimal.tag_number}
+                          {t("animals.tag_number")}: {selectedAnimal.tag_number}
                         </DialogDescription>
                       </div>
                       <div className="flex gap-2">
@@ -878,7 +880,7 @@ export function AnimalsManagement() {
                               className="bg-green-600 hover:bg-green-700 text-white"
                             >
                               <Save className="w-4 h-4 mr-2" />
-                              {isUpdating ? "Saving..." : "Save"}
+                              {isUpdating ? t("common.loading") : t("common.save")}
                             </Button>
                           </>
                         )}
@@ -980,8 +982,8 @@ export function AnimalsManagement() {
                               onChange={(e) => setEditFormData({ ...editFormData, is_active: e.target.value === "active" })}
                               className="mt-1 w-full px-3 py-2 border border-green-200 dark:border-green-700 rounded-md bg-white dark:bg-green-900"
                             >
-                              <option value="active">Active</option>
-                              <option value="inactive">Inactive</option>
+                              <option value="active">{t("animals.active")}</option>
+                              <option value="inactive">{t("animals.inactive")}</option>
                             </select>
                           ) : (
                             <p className="text-green-800 dark:text-green-200">
@@ -990,7 +992,7 @@ export function AnimalsManagement() {
                                   ? 'bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200'
                                   : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200'
                               }`}>
-                                {selectedAnimal.is_active !== false ? 'Active' : 'Inactive'}
+                                {selectedAnimal.is_active !== false ? t("animals.active") : t("animals.inactive")}
                               </span>
                             </p>
                           )}

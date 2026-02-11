@@ -11,11 +11,13 @@ import { UpcomingCalvingsWidget } from "@/components/farmer/UpcomingCalvingsWidg
 import { InseminationWidget } from "@/components/farmer/InseminationWidget"
 import { NotificationsWidget } from "@/components/farmer/NotificationsWidget"
 import { isAuthenticated } from "@/lib/auth"
+import { useTranslations } from "@/hooks/useTranslations"
 
 type DashboardView = "farm" | "animals" | "vets"
 
 export default function FarmerDashboard() {
   const router = useRouter()
+  const { t } = useTranslations()
   const [activeView, setActiveView] = useState<DashboardView>("farm")
   const [isChecking, setIsChecking] = useState(true)
 
@@ -34,7 +36,7 @@ export default function FarmerDashboard() {
   if (isChecking) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-green-50 dark:bg-green-950">
-        <div className="text-green-800 dark:text-green-200">Loading...</div>
+        <div className="text-green-800 dark:text-green-200">{t("common.loading")}</div>
       </div>
     )
   }

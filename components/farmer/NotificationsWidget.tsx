@@ -11,8 +11,10 @@ import {
 import { Button } from "@/components/ui/button"
 import { Bell, AlertCircle, Calendar, X, Droplets } from "lucide-react"
 import api from "@/lib/api"
+import { useTranslations } from "@/hooks/useTranslations"
 
 interface Notification {
+  id: string
   type: 'calving_due_soon' | 'insemination_due'
   priority: 'high' | 'medium' | 'low'
   message: string
@@ -26,9 +28,11 @@ interface Notification {
   is_overdue?: boolean
   is_in_window?: boolean
   is_approaching?: boolean
+  created_at?: string
 }
 
 export function NotificationsWidget() {
+  const { t } = useTranslations()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string>("")
@@ -62,15 +66,27 @@ export function NotificationsWidget() {
     }
   }
 
-  const handleDismiss = (index: number) => {
-    const key = `${notifications[index].type}-${notifications[index].tag_number}`
-    setDismissed(new Set(dismissed).add(key))
+  const handleDismiss = async (notification: Notification) => {
+    try {
+      // Mark as read in database
+      const response = await api.put(`/api/animals/notifications/${notification.id}/read`)
+      
+      if (response.ok) {
+        // Remove from local state
+        setNotifications(notifications.filter(n => n.id !== notification.id))
+      } else {
+        console.error('Failed to mark notification as read')
+        // Still remove from UI even if API call fails
+        setNotifications(notifications.filter(n => n.id !== notification.id))
+      }
+    } catch (err) {
+      console.error('Error marking notification as read:', err)
+      // Still remove from UI even if API call fails
+      setNotifications(notifications.filter(n => n.id !== notification.id))
+    }
   }
 
-  const visibleNotifications = notifications.filter((_, index) => {
-    const key = `${notifications[index].type}-${notifications[index].tag_number}`
-    return !dismissed.has(key)
-  })
+  const visibleNotifications = notifications
 
   const highPriorityCount = visibleNotifications.filter(n => n.priority === 'high').length
 
@@ -111,10 +127,10 @@ export function NotificationsWidget() {
             </div>
             <div>
               <CardTitle className="text-green-800 dark:text-green-100">
-                Notifications
+                {t("notifications.title")}
               </CardTitle>
               <CardDescription className="text-green-700 dark:text-green-300">
-                Important alerts and reminders
+                {t("notifications.important_alerts")}
               </CardDescription>
             </div>
           </div>
@@ -131,7 +147,7 @@ export function NotificationsWidget() {
             
             return (
               <div
-                key={`${notification.type}-${notification.tag_number}-${index}`}
+                key={notification.id}
                 className={`rounded-lg p-4 border-l-4 ${
                   isHighPriority
                     ? 'bg-red-50 dark:bg-red-900/20 border-red-500 dark:border-red-400'
@@ -188,7 +204,7 @@ export function NotificationsWidget() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleDismiss(index)}
+                    onClick={() => handleDismiss(notification)}
                     className="flex-shrink-0 h-6 w-6 p-0 hover:bg-white/50 dark:hover:bg-black/20"
                   >
                     <X className="w-4 h-4" />

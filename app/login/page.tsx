@@ -26,6 +26,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { login } from "@/lib/auth"
+import { useTranslations } from "@/hooks/useTranslations"
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -36,6 +37,7 @@ type LoginFormValues = z.infer<typeof loginSchema>
 
 export default function LoginPage() {
   const router = useRouter()
+  const { t } = useTranslations()
   const [error, setError] = useState<string>("")
   const [isLoading, setIsLoading] = useState(false)
 
@@ -85,7 +87,7 @@ export default function LoginPage() {
         window.location.href = redirectUrl
       }, 100)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred during login")
+      setError(err instanceof Error ? err.message : t("common.an_error_occurred"))
     } finally {
       setIsLoading(false)
     }
@@ -95,9 +97,9 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-green-50 dark:bg-green-950 p-4">
       <Card className="w-full max-w-md border-green-200 dark:border-green-800 bg-white dark:bg-green-900/50">
         <CardHeader>
-          <CardTitle className="text-green-800 dark:text-green-100">Login</CardTitle>
+          <CardTitle className="text-green-800 dark:text-green-100">{t("common.login")}</CardTitle>
           <CardDescription className="text-green-700 dark:text-green-300">
-            Enter your credentials to access your account
+            {t("common.enter_credentials")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -114,7 +116,7 @@ export default function LoginPage() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-green-800 dark:text-green-200">Email</FormLabel>
+                    <FormLabel className="text-green-800 dark:text-green-200">{t("common.email")}</FormLabel>
                     <FormControl>
                       <Input 
                         type="email" 
@@ -133,7 +135,7 @@ export default function LoginPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-green-800 dark:text-green-200">Password</FormLabel>
+                    <FormLabel className="text-green-800 dark:text-green-200">{t("common.password")}</FormLabel>
                     <FormControl>
                       <Input 
                         type="password" 
@@ -152,20 +154,20 @@ export default function LoginPage() {
                 className="w-full bg-green-600 hover:bg-green-700 text-white dark:bg-green-500 dark:hover:bg-green-600" 
                 disabled={isLoading}
               >
-                {isLoading ? "Logging in..." : "Login"}
+                {isLoading ? t("common.logging_in") : t("common.login")}
               </Button>
             </form>
           </Form>
         </CardContent>
         <CardFooter className="flex flex-col gap-2">
           <p className="text-sm text-green-700 dark:text-green-300">
-            Don't have an account?{" "}
+            {t("common.dont_have_account")}{" "}
             <Link href="/register" className="text-green-600 dark:text-green-400 font-medium hover:underline">
-              Register here
+              {t("common.register_here")}
             </Link>
           </p>
           <Link href="/" className="text-sm text-green-600 dark:text-green-400 hover:underline">
-            ← Back to home
+            {t("common.back_to_home")}
           </Link>
         </CardFooter>
       </Card>

@@ -29,6 +29,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Pagination } from "@/components/ui/pagination"
 import api from "@/lib/api"
+import { useTranslations } from "@/hooks/useTranslations"
 
 interface CowNeedingInsemination {
   cow_id: number
@@ -69,6 +70,7 @@ interface BullOption {
 }
 
 export function InseminationWidget() {
+  const { t } = useTranslations()
   const [cows, setCows] = useState<CowNeedingInsemination[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string>("")
@@ -128,7 +130,7 @@ export function InseminationWidget() {
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-200">
           <AlertCircle className="w-3 h-3 mr-1" />
-          Overdue
+          {t("insemination.overdue")}
         </span>
       )
     }
@@ -143,7 +145,7 @@ export function InseminationWidget() {
     return (
       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200">
         <Calendar className="w-3 h-3 mr-1" />
-        Approaching
+        {t("insemination.approaching")}
       </span>
     )
   }
@@ -251,28 +253,28 @@ export function InseminationWidget() {
         return (
           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200">
             <CheckCircle className="w-3 h-3 mr-1" />
-            Confirmed
+            {t("insemination.status_confirmed")}
           </span>
         )
       case 'failed':
         return (
           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-200">
             <XCircle className="w-3 h-3 mr-1" />
-            Failed
+            {t("insemination.status_failed")}
           </span>
         )
       case 'needs_repeat':
         return (
           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200">
             <RefreshCw className="w-3 h-3 mr-1" />
-            Needs Repeat
+            {t("insemination.status_needs_repeat")}
           </span>
         )
       default:
         return (
           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200">
             <Clock className="w-3 h-3 mr-1" />
-            Pending
+            {t("insemination.status_pending")}
           </span>
         )
     }
@@ -324,7 +326,7 @@ export function InseminationWidget() {
       <Card className="border-green-200 dark:border-green-800 bg-white dark:bg-green-900/50">
         <CardHeader>
           <CardTitle className="text-green-800 dark:text-green-100">
-            Insemination Due
+            {t("insemination.title")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -341,7 +343,7 @@ export function InseminationWidget() {
       <Card className="border-green-200 dark:border-green-800 bg-white dark:bg-green-900/50">
         <CardHeader>
           <CardTitle className="text-green-800 dark:text-green-100">
-            Insemination Due
+            {t("insemination.title")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -360,10 +362,10 @@ export function InseminationWidget() {
           <div>
             <CardTitle className="text-green-800 dark:text-green-100 flex items-center gap-2">
               <Calendar className="w-5 h-5" />
-              Insemination Due
+              {t("insemination.title")}
             </CardTitle>
             <CardDescription className="text-green-700 dark:text-green-300">
-              Cows ready for insemination (45-95 days since calving)
+              {t("insemination.description")}
             </CardDescription>
           </div>
           <div className="text-2xl font-bold text-green-600 dark:text-green-400">
@@ -375,7 +377,7 @@ export function InseminationWidget() {
         {cows.length === 0 ? (
           <div className="text-center py-8 text-green-600 dark:text-green-400">
             <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>No cows need insemination at this time</p>
+            <p>{t("insemination.no_cows")}</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -383,13 +385,13 @@ export function InseminationWidget() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Tag Number</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Days Since Calving</TableHead>
-                    <TableHead>Days Until Ideal</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Insemination Status</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead>{t("animals.tag_number")}</TableHead>
+                    <TableHead>{t("common.name")}</TableHead>
+                    <TableHead>{t("insemination.days_since_calving")}</TableHead>
+                    <TableHead>{t("insemination.days_until_ideal")}</TableHead>
+                    <TableHead>{t("common.status")}</TableHead>
+                    <TableHead>{t("insemination.status")}</TableHead>
+                    <TableHead>{t("common.actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -406,7 +408,7 @@ export function InseminationWidget() {
                       </TableCell>
                       <TableCell>
                         <span className={getStatusColor(cow.status, cow.is_overdue)}>
-                          {cow.is_overdue ? 'Overdue' : `${Math.ceil(cow.days_until_ideal)} days`}
+                          {cow.is_overdue ? t("insemination.overdue") : `${Math.ceil(cow.days_until_ideal)} ${t("calvings.days_remaining").toLowerCase()}`}
                         </span>
                       </TableCell>
                       <TableCell>
@@ -437,7 +439,7 @@ export function InseminationWidget() {
                             className="text-blue-600 border-blue-300 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-700"
                           >
                             <History className="w-4 h-4 mr-1" />
-                            History
+                            {t("insemination.manage_insemination")}
                           </Button>
                         </div>
                       </TableCell>
@@ -483,10 +485,10 @@ export function InseminationWidget() {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle className="text-green-800 dark:text-green-100">
-              Record Insemination
+              {t("insemination.record_insemination")}
             </DialogTitle>
             <DialogDescription className="text-green-700 dark:text-green-300">
-              Record insemination for {selectedCow?.tag_number} {selectedCow?.name && `(${selectedCow.name})`}
+              {t("insemination.record_for")} {selectedCow?.tag_number} {selectedCow?.name && `(${selectedCow.name})`}
             </DialogDescription>
           </DialogHeader>
           
@@ -499,7 +501,7 @@ export function InseminationWidget() {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="insemination_date" className="text-green-800 dark:text-green-100">
-                Insemination Date <span className="text-red-500">*</span>
+                {t("insemination.record_insemination")} <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="insemination_date"
@@ -515,7 +517,7 @@ export function InseminationWidget() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="bull_id" className="text-green-800 dark:text-green-100">
-                Bull (Optional)
+                {t("insemination.bull_optional")}
               </Label>
               <select
                 id="bull_id"
@@ -523,9 +525,9 @@ export function InseminationWidget() {
                 onChange={(e) => setSelectedBullId(e.target.value)}
                 className="flex h-9 w-full rounded-md border border-green-300 dark:border-green-700 bg-white dark:bg-green-900 px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
               >
-                <option value="">— No bull selected —</option>
+                <option value="">{t("insemination.no_bull_selected")}</option>
                 {isLoadingBulls ? (
-                  <option disabled>Loading bulls...</option>
+                  <option disabled>{t("common.loading")}</option>
                 ) : (
                   bulls.map((b) => (
                     <option key={b.id} value={b.animalable_id}>
@@ -537,14 +539,14 @@ export function InseminationWidget() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="insemination_notes" className="text-green-800 dark:text-green-100">
-                Notes (Optional)
+                {t("insemination.notes_optional")}
               </Label>
               <textarea
                 id="insemination_notes"
                 value={inseminationNotes}
                 onChange={(e) => setInseminationNotes(e.target.value)}
                 className="flex min-h-[80px] w-full rounded-md border border-green-300 dark:border-green-700 bg-white dark:bg-green-900 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                placeholder="Add any notes about this insemination..."
+                placeholder={t("insemination.notes_placeholder")}
               />
             </div>
           </div>
@@ -570,7 +572,7 @@ export function InseminationWidget() {
               disabled={isRecordingInsemination || !inseminationDate}
               className="bg-green-600 hover:bg-green-700 text-white"
             >
-              {isRecordingInsemination ? "Recording..." : "Record Insemination"}
+              {isRecordingInsemination ? t("common.loading") : t("insemination.record_insemination")}
             </Button>
           </div>
         </DialogContent>
@@ -581,10 +583,10 @@ export function InseminationWidget() {
         <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-green-800 dark:text-green-100">
-              Insemination History
+              {t("insemination.title")}
             </DialogTitle>
             <DialogDescription className="text-green-700 dark:text-green-300">
-              History for {selectedCow?.tag_number} {selectedCow?.name && `(${selectedCow.name})`}
+                            {t("insemination.history")} for {selectedCow?.tag_number} {selectedCow?.name && `(${selectedCow.name})`}
             </DialogDescription>
           </DialogHeader>
           
@@ -596,12 +598,12 @@ export function InseminationWidget() {
 
           {isLoadingHistory ? (
             <div className="text-center py-8 text-green-600 dark:text-green-400">
-              Loading history...
+              {t("common.loading")}
             </div>
           ) : inseminationHistory.length === 0 ? (
             <div className="text-center py-8 text-green-600 dark:text-green-400">
               <History className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>No insemination records found</p>
+              <p>{t("insemination.no_records")}</p>
             </div>
           ) : (
             <div className="space-y-4 py-4">
@@ -609,11 +611,11 @@ export function InseminationWidget() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Bull</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Notes</TableHead>
-                      <TableHead>Actions</TableHead>
+                      <TableHead>{t("calvings.expected_date")}</TableHead>
+                      <TableHead>{t("animals.bull")}</TableHead>
+                      <TableHead>{t("common.status")}</TableHead>
+                      <TableHead>{t("insemination.status")}</TableHead>
+                      <TableHead>{t("common.actions")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -638,7 +640,7 @@ export function InseminationWidget() {
                             onClick={() => handleUpdateStatusClick(insemination)}
                             className="text-blue-600 border-blue-300 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-700"
                           >
-                            Update Status
+                            {t("insemination.update_status")}
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -671,10 +673,10 @@ export function InseminationWidget() {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle className="text-green-800 dark:text-green-100">
-              Update Insemination Status
+              {t("insemination.update_status")}
             </DialogTitle>
             <DialogDescription className="text-green-700 dark:text-green-300">
-              Update status for insemination on {selectedInsemination && new Date(selectedInsemination.insemination_date).toLocaleDateString()}
+              {t("insemination.update_status_for")} {selectedInsemination && new Date(selectedInsemination.insemination_date).toLocaleDateString()}
             </DialogDescription>
           </DialogHeader>
           
@@ -687,7 +689,7 @@ export function InseminationWidget() {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="status" className="text-green-800 dark:text-green-100">
-                Status <span className="text-red-500">*</span>
+                {t("common.status")} <span className="text-red-500">*</span>
               </Label>
               <select
                 id="status"
@@ -703,14 +705,14 @@ export function InseminationWidget() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="status_notes" className="text-green-800 dark:text-green-100">
-                Notes (Optional)
+                {t("insemination.notes_optional")}
               </Label>
               <textarea
                 id="status_notes"
                 value={statusNotes}
                 onChange={(e) => setStatusNotes(e.target.value)}
                 className="flex min-h-[80px] w-full rounded-md border border-green-300 dark:border-green-700 bg-white dark:bg-green-900 px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                placeholder="Add notes about the status update..."
+                placeholder={t("insemination.status_notes_placeholder")}
               />
             </div>
           </div>
@@ -734,7 +736,7 @@ export function InseminationWidget() {
               disabled={isUpdatingStatus}
               className="bg-green-600 hover:bg-green-700 text-white"
             >
-              {isUpdatingStatus ? "Updating..." : "Update Status"}
+              {isUpdatingStatus ? t("common.loading") : t("insemination.status")}
             </Button>
           </div>
         </DialogContent>

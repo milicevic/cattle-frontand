@@ -23,6 +23,28 @@ function getSanctumToken(): string | null {
   return null;
 }
 
+// Helper function to get test country code for geolocation testing
+function getTestCountry(): string | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  // Check URL parameter first (e.g., ?test_country=RS)
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlCountry = urlParams.get('test_country');
+  if (urlCountry) {
+    return urlCountry.toUpperCase();
+  }
+
+  // Check localStorage for persistent test country
+  const storedCountry = localStorage.getItem('test_country');
+  if (storedCountry) {
+    return storedCountry.toUpperCase();
+  }
+
+  return null;
+}
+
 // Base URL configuration
 const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -34,33 +56,81 @@ async function apiFetch(
   // Get the Sanctum token
   const token = getSanctumToken();
 
-  // Build headers
-  const headers = new Headers(options.headers || {});
+  // Build headers object
+  const headersObj: Record<string, string> = {};
+  
+  // Copy existing headers from options
+  if (options.headers) {
+    if (options.headers instanceof Headers) {
+      options.headers.forEach((value, key) => {
+        headersObj[key] = value;
+      });
+    } else if (Array.isArray(options.headers)) {
+      options.headers.forEach(([key, value]) => {
+        headersObj[key] = value;
+      });
+    } else {
+      Object.assign(headersObj, options.headers);
+    }
+  }
   
   // Set default headers if not already set
-  if (!headers.has('Content-Type')) {
-    headers.set('Content-Type', 'application/json');
+  if (!headersObj['Content-Type']) {
+    headersObj['Content-Type'] = 'application/json';
   }
-  if (!headers.has('Accept')) {
-    headers.set('Accept', 'application/json');
+  if (!headersObj['Accept']) {
+    headersObj['Accept'] = 'application/json';
   }
 
   // Add Sanctum token to headers if available
   if (token) {
-    headers.set('Authorization', `Bearer ${token}`);
+    headersObj['Authorization'] = `Bearer ${token}`;
+  }
+
+  // Add test country header for geolocation testing (localhost)
+  const testCountry = getTestCountry();
+  if (testCountry) {
+    headersObj['X-Test-Country'] = testCountry;
+    // Debug logging (can be removed in production)
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+      console.log(`[API] Sending test country header: X-Test-Country: ${testCountry}`);
+      console.log(`[API] All headers:`, headersObj);
+    }
   }
 
   // Construct full URL
-  const fullUrl = url.startsWith('http') ? url : `${baseURL}${url}`;
+  let fullUrl = url.startsWith('http') ? url : `${baseURL}${url}`;
+  
+  // Add test_country as query parameter (more reliable than header for CORS)
+  // Backend supports both query param and header, but query param is more reliable
+  if (testCountry) {
+    const separator = fullUrl.includes('?') ? '&' : '?';
+    fullUrl = `${fullUrl}${separator}test_country=${testCountry}`;
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+      console.log(`[API] Added test_country query param: ${fullUrl}`);
+    }
+  }
 
   try {
     // Make the request with credentials
-    const response = await fetch(fullUrl, {
-      ...options,
-      headers,
+    // Important: Put headers AFTER spreading options to ensure they're not overwritten
+    // Also ensure we don't have headers in options that would overwrite ours
+    const { headers: optionsHeaders, ...restOptions } = options || {};
+    
+    const fetchOptions: RequestInit = {
+      ...restOptions,
+      method: options?.method || 'GET',
       credentials: 'include', // Important for Sanctum cookies
       mode: 'cors', // Explicitly set CORS mode
-    });
+      headers: headersObj, // Set headers last to ensure they're not overwritten
+    };
+
+    // Also add header (in case backend supports it better)
+    if (testCountry) {
+      headersObj['X-Test-Country'] = testCountry;
+    }
+
+    const response = await fetch(fullUrl, fetchOptions);
 
     // Handle 401 unauthorized - token expired or invalid
     if (response.status === 401) {
@@ -116,35 +186,73 @@ async function apiFetch(
 
 // Convenience methods for common HTTP verbs
 export const api = {
-  get: (url: string, options?: RequestInit) => 
-    apiFetch(url, { ...options, method: 'GET' }),
+  get: (url: string, options?: RequestInit) => {
+    // Remove headers from options to prevent overwriting
+    const { headers, ...restOptions } = options || {};
+    return apiFetch(url, { ...restOptions, method: 'GET' });
+  },
   
-  post: (url: string, data?: any, options?: RequestInit) => 
-    apiFetch(url, {
-      ...options,
+  post: (url: string, data?: any, options?: RequestInit) => {
+    // Remove headers from options to prevent overwriting
+    const { headers, ...restOptions } = options || {};
+    return apiFetch(url, {
+      ...restOptions,
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined,
-    }),
+    });
+  },
   
-  put: (url: string, data?: any, options?: RequestInit) => 
-    apiFetch(url, {
-      ...options,
+  put: (url: string, data?: any, options?: RequestInit) => {
+    // Remove headers from options to prevent overwriting
+    const { headers, ...restOptions } = options || {};
+    return apiFetch(url, {
+      ...restOptions,
       method: 'PUT',
       body: data ? JSON.stringify(data) : undefined,
-    }),
+    });
+  },
   
-  patch: (url: string, data?: any, options?: RequestInit) => 
-    apiFetch(url, {
-      ...options,
+  patch: (url: string, data?: any, options?: RequestInit) => {
+    // Remove headers from options to prevent overwriting
+    const { headers, ...restOptions } = options || {};
+    return apiFetch(url, {
+      ...restOptions,
       method: 'PATCH',
       body: data ? JSON.stringify(data) : undefined,
-    }),
+    });
+  },
   
-  delete: (url: string, options?: RequestInit) => 
-    apiFetch(url, { ...options, method: 'DELETE' }),
+  delete: (url: string, options?: RequestInit) => {
+    // Remove headers from options to prevent overwriting
+    const { headers, ...restOptions } = options || {};
+    return apiFetch(url, { ...restOptions, method: 'DELETE' });
+  },
   
   // Raw fetch method if you need more control
   fetch: apiFetch,
 };
+
+/**
+ * Set test country for geolocation testing (useful for localhost)
+ * @param countryCode - Country code (e.g., 'RS' for Serbia, 'US' for USA)
+ */
+export function setTestCountry(countryCode: string | null): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  
+  if (countryCode) {
+    localStorage.setItem('test_country', countryCode.toUpperCase());
+  } else {
+    localStorage.removeItem('test_country');
+  }
+}
+
+/**
+ * Get current test country
+ */
+export function getTestCountryCode(): string | null {
+  return getTestCountry();
+}
 
 export default api;

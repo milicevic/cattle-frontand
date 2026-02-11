@@ -302,7 +302,6 @@ export function VetUpcomingCalvingsWidget({ farmId }: VetUpcomingCalvingsWidgetP
                     <TableHead>Name</TableHead>
                     <TableHead>Expected Date</TableHead>
                     <TableHead>Days Remaining</TableHead>
-                    <TableHead>Progress</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -321,27 +320,6 @@ export function VetUpcomingCalvingsWidget({ farmId }: VetUpcomingCalvingsWidgetP
                         <span className={getStatusColor(calving.days_remaining, calving.progress?.status)}>
                           {Math.ceil(calving.days_remaining)} days
                         </span>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <div className="w-24 bg-green-100 dark:bg-green-800 rounded-full h-2">
-                            <div
-                              className={`h-2 rounded-full ${
-                                calving.progress?.status === "overdue"
-                                  ? "bg-red-500"
-                                  : calving.progress?.status === "due_soon" || calving.days_remaining <= 7
-                                  ? "bg-yellow-500"
-                                  : "bg-green-500"
-                              }`}
-                              style={{
-                                width: `${Math.min(100, Math.max(0, calving.progress?.progress_percentage || 0))}%`,
-                              }}
-                            />
-                          </div>
-                          <span className="text-xs text-green-700 dark:text-green-300">
-                            {calving.progress?.progress_percentage.toFixed(0) || 0}%
-                          </span>
-                        </div>
                       </TableCell>
                       <TableCell>
                         {getStatusBadge(calving.days_remaining, calving.progress?.status)}

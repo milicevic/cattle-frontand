@@ -1,5 +1,7 @@
 "use client"
 
+import { useTranslations } from "@/hooks/useTranslations"
+
 type DashboardView = "farm" | "animals" | "vets"
 
 interface BottomMenuProps {
@@ -8,10 +10,12 @@ interface BottomMenuProps {
 }
 
 export function BottomMenu({ activeView, setActiveView }: BottomMenuProps) {
+  const { t } = useTranslations()
+  
   const menuItems = [
-    { id: "farm" as DashboardView, label: "Farm", icon: "🏡" },
-    { id: "animals" as DashboardView, label: "Animals", icon: "🐄" },
-    { id: "vets" as DashboardView, label: "Vets", icon: "👨‍⚕️" },
+    { id: "farm" as DashboardView, label: t("menu.farm_information"), icon: "🏡" },
+    { id: "animals" as DashboardView, label: t("menu.animals"), icon: "🐄" },
+    { id: "vets" as DashboardView, label: t("menu.veterinarians"), icon: "👨‍⚕️" },
   ]
 
   return (

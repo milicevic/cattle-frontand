@@ -29,6 +29,7 @@ import { Eye, Calendar, AlertCircle, Edit, Save, X, Plus, Trash2, Baby, ChevronD
 import { Input } from "@/components/ui/input"
 import { Pagination } from "@/components/ui/pagination"
 import api from "@/lib/api"
+import { useTranslations } from "@/hooks/useTranslations"
 
 interface UpcomingCalving {
   cow_id: number
@@ -93,6 +94,7 @@ interface NextInseminationPeriod {
 
 export function UpcomingCalvingsWidget() {
   const router = useRouter()
+  const { t } = useTranslations()
   const [upcomingCalvings, setUpcomingCalvings] = useState<UpcomingCalving[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string>("")
@@ -363,7 +365,7 @@ export function UpcomingCalvingsWidget() {
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-200">
           <AlertCircle className="w-3 h-3 mr-1" />
-          Overdue
+          {t("calvings.status_overdue")}
         </span>
       )
     }
@@ -371,14 +373,14 @@ export function UpcomingCalvingsWidget() {
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200">
           <AlertCircle className="w-3 h-3 mr-1" />
-          Due Soon
+          {t("calvings.status_due_soon")}
         </span>
       )
     }
     return (
       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200">
         <Calendar className="w-3 h-3 mr-1" />
-        On Track
+        {t("calvings.status_on_track")}
       </span>
     )
   }
@@ -388,7 +390,7 @@ export function UpcomingCalvingsWidget() {
       <Card className="border-green-200 dark:border-green-800 bg-white dark:bg-green-900/50">
         <CardHeader>
           <CardTitle className="text-green-800 dark:text-green-100">
-            Upcoming Calvings
+            {t("calvings.title")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -405,7 +407,7 @@ export function UpcomingCalvingsWidget() {
       <Card className="border-green-200 dark:border-green-800 bg-white dark:bg-green-900/50">
         <CardHeader>
           <CardTitle className="text-green-800 dark:text-green-100">
-            Upcoming Calvings
+            {t("calvings.title")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -424,10 +426,10 @@ export function UpcomingCalvingsWidget() {
           <div>
             <CardTitle className="text-green-800 dark:text-green-100 flex items-center gap-2">
               <Calendar className="w-5 h-5" />
-              Upcoming Calvings
+              {t("calvings.title")}
             </CardTitle>
             <CardDescription className="text-green-700 dark:text-green-300">
-              Cows in their final month of pregnancy
+              {t("calvings.description")}
             </CardDescription>
           </div>
           <div className="text-2xl font-bold text-green-600 dark:text-green-400">
@@ -439,7 +441,7 @@ export function UpcomingCalvingsWidget() {
         {upcomingCalvings.length === 0 ? (
           <div className="text-center py-8 text-green-600 dark:text-green-400">
             <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>No upcoming calvings in the next 30 days</p>
+            <p>{t("calvings.no_upcoming")}</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -449,9 +451,8 @@ export function UpcomingCalvingsWidget() {
                   <TableRow>
                     <TableHead>Tag Number</TableHead>
                     <TableHead>Name</TableHead>
-                    <TableHead>Expected Date</TableHead>
-                    <TableHead>Days Remaining</TableHead>
-                    <TableHead>Progress</TableHead>
+                    <TableHead>{t("calvings.expected_date")}</TableHead>
+                    <TableHead>{t("calvings.days_remaining")}</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -474,27 +475,6 @@ export function UpcomingCalvingsWidget() {
                         <span className={getStatusColor(calving.days_remaining, calving.progress?.status)}>
                           {Math.ceil(calving.days_remaining)} days
                         </span>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <div className="w-24 bg-green-100 dark:bg-green-800 rounded-full h-2">
-                            <div
-                              className={`h-2 rounded-full ${
-                                calving.progress?.status === "overdue"
-                                  ? "bg-red-500"
-                                  : calving.progress?.status === "due_soon" || calving.days_remaining <= 7
-                                  ? "bg-yellow-500"
-                                  : "bg-green-500"
-                              }`}
-                              style={{
-                                width: `${Math.min(100, Math.max(0, calving.progress?.progress_percentage || 0))}%`,
-                              }}
-                            />
-                          </div>
-                          <span className="text-xs text-green-700 dark:text-green-300">
-                            {calving.progress?.progress_percentage.toFixed(0) || 0}%
-                          </span>
-                        </div>
                       </TableCell>
                       <TableCell>
                         {getStatusBadge(calving.days_remaining, calving.progress?.status)}
@@ -551,7 +531,7 @@ export function UpcomingCalvingsWidget() {
                 className="text-green-600 border-green-300 hover:bg-green-50 dark:text-green-400 dark:border-green-700"
               >
                 <Eye className="w-4 h-4 mr-2" />
-                View All Animals
+                {t("calvings.view_all_animals")}
               </Button>
             </div>
           </div>
@@ -571,7 +551,7 @@ export function UpcomingCalvingsWidget() {
                       {selectedAnimal.name || selectedAnimal.tag_number}
                     </DialogTitle>
                     <DialogDescription className="text-green-700 dark:text-green-300">
-                      Tag Number: {selectedAnimal.tag_number}
+                      {t("animals.tag_number")}: {selectedAnimal.tag_number}
                     </DialogDescription>
                   </div>
                   <div className="flex gap-2">
@@ -583,7 +563,7 @@ export function UpcomingCalvingsWidget() {
                         className="text-green-600 border-green-300 hover:bg-green-50 dark:text-green-400 dark:border-green-700"
                       >
                         <Edit className="w-4 h-4 mr-2" />
-                        Edit
+                        {t("common.edit")}
                       </Button>
                     ) : (
                       <>
@@ -594,7 +574,7 @@ export function UpcomingCalvingsWidget() {
                           className="text-gray-600 border-gray-300 hover:bg-gray-50 dark:text-gray-400"
                         >
                           <X className="w-4 h-4 mr-2" />
-                          Cancel
+                          {t("common.cancel")}
                         </Button>
                         <Button
                           size="sm"
@@ -603,7 +583,7 @@ export function UpcomingCalvingsWidget() {
                           className="bg-green-600 hover:bg-green-700 text-white"
                         >
                           <Save className="w-4 h-4 mr-2" />
-                          {isUpdating ? "Saving..." : "Save"}
+                          {isUpdating ? t("common.loading") : t("common.save")}
                         </Button>
                       </>
                     )}
@@ -665,15 +645,15 @@ export function UpcomingCalvingsWidget() {
                       )}
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-green-700 dark:text-green-300">Status</label>
+                      <label className="text-sm font-medium text-green-700 dark:text-green-300">{t("common.status")}</label>
                       {isEditing ? (
                         <select
                           value={editFormData.is_active ? "active" : "inactive"}
                           onChange={(e) => setEditFormData({ ...editFormData, is_active: e.target.value === "active" })}
                           className="mt-1 w-full px-3 py-2 border border-green-200 dark:border-green-700 rounded-md bg-white dark:bg-green-900"
                         >
-                          <option value="active">Active</option>
-                          <option value="inactive">Inactive</option>
+                          <option value="active">{t("animals.active")}</option>
+                          <option value="inactive">{t("animals.inactive")}</option>
                         </select>
                       ) : (
                         <p className="text-green-800 dark:text-green-200">
@@ -682,7 +662,7 @@ export function UpcomingCalvingsWidget() {
                               ? 'bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200'
                               : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200'
                           }`}>
-                            {selectedAnimal.is_active !== false ? 'Active' : 'Inactive'}
+                            {selectedAnimal.is_active !== false ? t("animals.active") : t("animals.inactive")}
                           </span>
                         </p>
                       )}
@@ -712,7 +692,7 @@ export function UpcomingCalvingsWidget() {
                         {(selectedAnimal.type === "Cow" || selectedAnimal.type === "Heifer") && (
                           <>
                             <div>
-                              <label className="text-sm font-medium text-green-700 dark:text-green-300">Milk Yield (L/day)</label>
+                              <label className="text-sm font-medium text-green-700 dark:text-green-300">{t("calvings.milk_yield")}</label>
                               {isEditing ? (
                                 <Input
                                   type="number"
@@ -745,7 +725,7 @@ export function UpcomingCalvingsWidget() {
                               )}
                             </div>
                             <div>
-                              <label className="text-sm font-medium text-green-700 dark:text-green-300">Last Insemination Date</label>
+                              <label className="text-sm font-medium text-green-700 dark:text-green-300">{t("calvings.last_insemination_date")}</label>
                               {isEditing ? (
                                 <Input
                                   type="date"
@@ -855,19 +835,19 @@ export function UpcomingCalvingsWidget() {
                       </div>
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
-                          <span className="text-green-700 dark:text-green-300">Last Insemination:</span>
+                          <span className="text-green-700 dark:text-green-300">{t("calvings.last_insemination")}</span>
                           <p className="text-green-800 dark:text-green-200 font-medium">
                             {new Date(selectedPregnancyProgress.last_insemination_date).toLocaleDateString()}
                           </p>
                         </div>
                         <div>
-                          <span className="text-green-700 dark:text-green-300">Expected Calving:</span>
+                          <span className="text-green-700 dark:text-green-300">{t("calvings.expected_calving")}</span>
                           <p className="text-green-800 dark:text-green-200 font-medium">
                             {new Date(selectedPregnancyProgress.expected_calving_date).toLocaleDateString()}
                           </p>
                         </div>
                         <div>
-                          <span className="text-green-700 dark:text-green-300">Days Remaining:</span>
+                          <span className="text-green-700 dark:text-green-300">{t("calvings.days_remaining")}:</span>
                           <p className={`font-medium ${
                             selectedPregnancyProgress.days_until_calving < 0
                               ? 'text-red-600 dark:text-red-400'
@@ -923,7 +903,7 @@ export function UpcomingCalvingsWidget() {
                       <div className="bg-green-50 dark:bg-green-900/30 rounded-lg p-4 border border-green-200 dark:border-green-700">
                         <div className="space-y-2">
                           <p className="text-sm text-green-800 dark:text-green-200">
-                            <strong>Last Calving:</strong> {new Date(nextInseminationPeriod.last_calving_date).toLocaleDateString()} 
+                            <strong>{t("calvings.last_calving")}</strong> {new Date(nextInseminationPeriod.last_calving_date).toLocaleDateString()} 
                             <span className="text-green-600 dark:text-green-400 ml-2">({nextInseminationPeriod.days_since_calving} days ago)</span>
                           </p>
                           <p className="text-sm text-green-800 dark:text-green-200">
@@ -958,11 +938,11 @@ export function UpcomingCalvingsWidget() {
           <DialogHeader>
             <DialogTitle className="text-green-800 dark:text-green-100 flex items-center gap-2">
               <Baby className="w-5 h-5" />
-              Record Calving
+              {t("calvings.record_calving")}
             </DialogTitle>
             <DialogDescription className="text-green-700 dark:text-green-300">
               {selectedCalving && (
-                <>Record calving for {selectedCalving.name || selectedCalving.tag_number}</>
+                <>{t("calvings.record_for")} {selectedCalving.name || selectedCalving.tag_number}</>
               )}
             </DialogDescription>
           </DialogHeader>
@@ -1000,7 +980,7 @@ export function UpcomingCalvingsWidget() {
                       : "border-green-300 text-green-700 dark:text-green-300"
                   }`}
                 >
-                  ✓ Successful
+                  ✓ {t("calvings.successful")}
                 </Button>
                 <Button
                   type="button"
@@ -1018,7 +998,7 @@ export function UpcomingCalvingsWidget() {
                       : "border-red-300 text-red-700 dark:text-red-300"
                   }`}
                 >
-                  ✗ Unsuccessful
+                  ✗ {t("calvings.unsuccessful")}
                 </Button>
               </div>
             </div>
@@ -1027,7 +1007,7 @@ export function UpcomingCalvingsWidget() {
             <div className="grid grid-cols-1 gap-4">
               <div>
                 <label className="text-sm font-medium text-green-700 dark:text-green-300">
-                  Calving Date *
+                  {t("calvings.calving_date")} *
                 </label>
                 <Input
                   type="date"
@@ -1048,7 +1028,7 @@ export function UpcomingCalvingsWidget() {
               </div>
               <div>
                 <label className="text-sm font-medium text-green-700 dark:text-green-300">
-                  Calving Notes / Outcome
+                  {t("calvings.calving_notes")}
                 </label>
                 <textarea
                   value={calvingFormData.notes}
@@ -1059,8 +1039,8 @@ export function UpcomingCalvingsWidget() {
                   rows={3}
                   placeholder={
                     calvingFormData.is_successful === false
-                      ? "Enter details about what went wrong, complications, or outcome..."
-                      : "Enter any notes about the calving process, complications, or outcome..."
+                      ? t("calvings.notes_placeholder_failure")
+                      : t("calvings.notes_placeholder_success")
                   }
                 />
               </div>
@@ -1071,7 +1051,7 @@ export function UpcomingCalvingsWidget() {
             <div>
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold text-green-800 dark:text-green-100">
-                  Calves Born
+                  {t("calvings.calves_born")}
                 </h3>
                 <Button
                   type="button"
@@ -1081,15 +1061,15 @@ export function UpcomingCalvingsWidget() {
                   className="text-green-600 border-green-300 hover:bg-green-50 dark:text-green-400 dark:border-green-700"
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  Add Calf
+                  {t("calvings.add_calf")}
                 </Button>
               </div>
 
               {calvingFormData.calves.length === 0 ? (
                 <div className="text-center py-8 text-green-600 dark:text-green-400 border border-dashed border-green-300 dark:border-green-700 rounded-lg">
                   <Baby className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p>No calves added. Click "Add Calf" to record calves born.</p>
-                  <p className="text-sm mt-1">You can leave this empty if recording a stillbirth or no calves.</p>
+                  <p>{t("calvings.no_calves_added")}</p>
+                  <p className="text-sm mt-1">{t("calvings.no_calves_hint")}</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -1118,7 +1098,7 @@ export function UpcomingCalvingsWidget() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
                             <label className="text-sm font-medium text-green-700 dark:text-green-300">
-                              Tag Number *
+                              {t("animals.tag_number")} *
                             </label>
                             <Input
                               value={calf.tag_number}
@@ -1126,13 +1106,13 @@ export function UpcomingCalvingsWidget() {
                                 handleCalfChange(index, "tag_number", e.target.value)
                               }
                               className="mt-1 border-green-200 dark:border-green-700"
-                              placeholder="Calf tag number"
+                              placeholder={t("calvings.calf_tag_number")}
                               required
                             />
                           </div>
                           <div>
                             <label className="text-sm font-medium text-green-700 dark:text-green-300">
-                              Name
+                              {t("common.name")}
                             </label>
                             <Input
                               value={calf.name}
@@ -1140,12 +1120,12 @@ export function UpcomingCalvingsWidget() {
                                 handleCalfChange(index, "name", e.target.value)
                               }
                               className="mt-1 border-green-200 dark:border-green-700"
-                              placeholder="Calf name (optional)"
+                              placeholder={t("calvings.calf_name_placeholder")}
                             />
                           </div>
                           <div>
                             <label className="text-sm font-medium text-green-700 dark:text-green-300">
-                              Type *
+                              {t("animals.type")} *
                             </label>
                             <select
                               value={calf.type}
@@ -1163,7 +1143,7 @@ export function UpcomingCalvingsWidget() {
                           </div>
                           <div>
                             <label className="text-sm font-medium text-green-700 dark:text-green-300">
-                              Date of Birth
+                              {t("animals.date_of_birth")}
                             </label>
                             <Input
                               type="date"

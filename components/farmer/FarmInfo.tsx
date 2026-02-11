@@ -12,9 +12,11 @@ import {
 } from "@/components/ui/card"
 import { Edit, MapPin, Building2, CheckCircle2, XCircle } from "lucide-react"
 import api from "@/lib/api"
+import { useTranslations } from "@/hooks/useTranslations"
 
 export function FarmInfo() {
   const router = useRouter()
+  const { t } = useTranslations()
   const [farm, setFarm] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -49,7 +51,7 @@ export function FarmInfo() {
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              <p className="text-lg font-medium">Loading farm information...</p>
+              <p className="text-lg font-medium">{t("farm.loading_farm")}</p>
             </div>
           </CardContent>
         </Card>
@@ -63,10 +65,10 @@ export function FarmInfo() {
         <Card className="border-green-200 dark:border-green-800 bg-white dark:bg-green-900/50 shadow-lg">
           <CardHeader className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30 border-b border-green-200 dark:border-green-700">
             <CardTitle className="text-2xl text-green-800 dark:text-green-100 font-bold">
-              Farm Information
+              {t("farm.title")}
             </CardTitle>
             <CardDescription className="text-green-700 dark:text-green-300 mt-1">
-              No farm information found
+              {t("farm.no_farm_found")}
             </CardDescription>
           </CardHeader>
           <CardContent className="p-6">
@@ -97,10 +99,10 @@ export function FarmInfo() {
             <div>
               <CardTitle className="text-green-800 dark:text-green-100 flex items-center gap-2">
                 <span className="text-3xl">🏡</span>
-                Farm Information
+                {t("farm.title")}
               </CardTitle>
               <CardDescription className="text-green-700 dark:text-green-300">
-                Manage your farm details
+                {t("farm.manage_details")}
               </CardDescription>
             </div>
             <Button
@@ -121,7 +123,7 @@ export function FarmInfo() {
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm font-semibold text-green-700 dark:text-green-300 uppercase tracking-wide">
-                    Farm Name
+                    {t("farm.name")}
                   </CardTitle>
                   <Building2 className="w-5 h-5 text-green-600 dark:text-green-400" />
                 </div>
@@ -138,7 +140,7 @@ export function FarmInfo() {
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm font-semibold text-green-700 dark:text-green-300 uppercase tracking-wide">
-                    Status
+                    {t("common.status")}
                   </CardTitle>
                   {farm.is_active ? (
                     <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
@@ -156,12 +158,12 @@ export function FarmInfo() {
                   {farm.is_active ? (
                     <>
                       <CheckCircle2 className="w-4 h-4" />
-                      Active
+                      {t("farm.active")}
                     </>
                   ) : (
                     <>
                       <XCircle className="w-4 h-4" />
-                      Inactive
+                      {t("farm.inactive")}
                     </>
                   )}
                 </span>
@@ -193,7 +195,7 @@ export function FarmInfo() {
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm font-semibold text-green-700 dark:text-green-300 uppercase tracking-wide">
-                      State / Province
+                      {t("farm.state_province")}
                     </CardTitle>
                     <MapPin className="w-5 h-5 text-green-600 dark:text-green-400" />
                   </div>
