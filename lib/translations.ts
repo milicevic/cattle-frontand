@@ -16,16 +16,21 @@ export async function fetchTranslations(): Promise<Translations> {
     
     if (response.ok) {
       const data = await response.json()
-      cachedTranslations = data.translations || {}
+      const translations = data.translations || {}
+      cachedTranslations = translations
       currentLocale = data.locale || 'en'
-      return cachedTranslations
+      return translations
     }
     
     // Fallback to empty object if API fails
-    return {}
+    const fallback: Translations = {}
+    cachedTranslations = fallback
+    return fallback
   } catch (error) {
     console.error("Error fetching translations:", error)
-    return {}
+    const fallback: Translations = {}
+    cachedTranslations = fallback
+    return fallback
   }
 }
 
